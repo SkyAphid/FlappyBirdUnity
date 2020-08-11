@@ -6,7 +6,7 @@ public class AudioManager : MonoBehaviour
 {
 
 
-    public static AudioManager INSTANCE;
+    public static AudioManager Instance;
 
     public enum Sound
     {
@@ -23,12 +23,12 @@ public class AudioManager : MonoBehaviour
     void Awake()
     {
         //Initialize Singleton
-        if (INSTANCE != null)
+        if (Instance != null)
         {
             Debug.LogError("Multiple AudioManager instances found.");
         }
 
-        INSTANCE = this;
+        Instance = this;
 
         //Initialize audio clips into audio sources
         AudioSource = new AudioSource[AudioClips.Length];
@@ -42,6 +42,6 @@ public class AudioManager : MonoBehaviour
 
     public static void PlaySFX(Sound sound)
     {
-        INSTANCE.AudioSource[(int)sound].Play();
+        Instance.AudioSource[(int)sound].Play();
     }
 }

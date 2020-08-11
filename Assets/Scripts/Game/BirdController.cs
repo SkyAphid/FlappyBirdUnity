@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEditor.U2D.Path.GUIFramework;
 using UnityEngine;
@@ -20,8 +21,16 @@ public class BirdController : MonoBehaviour
     [SerializeField] private Rigidbody2D m_RigidBody = null;
     private Animator m_Animator = null;
 
+    //Bird rotation angle
     private bool m_AngleLocked = false;
     private float m_BirdAngle = 0f;
+
+    //Whether or not the bird has hit an obstacle and died
+    private bool m_IsDead = false;
+
+    //Callbacks for various game actions
+    public event Action<Collision2D> OnCollision;
+    public event Action<Collider2D> OnClearPipe;
 
     private void Start()
     {
@@ -29,7 +38,7 @@ public class BirdController : MonoBehaviour
     }
 
     // Update is called once per frame
-    void Update()
+    public void ManualUpdate()
     {
         //Bird is allowed to move horizontally
         m_RigidBody.velocity = new Vector2(0, m_RigidBody.velocity.y);
@@ -58,7 +67,7 @@ public class BirdController : MonoBehaviour
 
     private void Jump(InputAction.CallbackContext context)
     {
-        if (!GlobalVariables.IsGameOver())
+        if (!m_IsDead)
         {
             //Reset the velocity and then apply an impulse force upward
             m_RigidBody.velocity = new Vector2(0, 0);
@@ -67,15 +76,19 @@ public class BirdController : MonoBehaviour
         }
     }
 
+    //This function handles collisions with obstacles
     private void OnCollisionEnter2D(Collision2D collision)
     {
 
-        string tag = collision.collider.tag;
-        Debug.Log(tag);
-
-        if (!GlobalVariables.IsGameOver())
+        if (OnCollision != null)
         {
-            GlobalVariables.SetGameOver(true);
+            OnCollision.Invoke(collision);
+        }
+
+        string tag = collision.collider.tag;
+
+        if (!m_IsDead)
+        {
             m_Animator.speed = 0f;
 
             //Default smash sound for colliding into something
@@ -92,25 +105,33 @@ public class BirdController : MonoBehaviour
             foreach (object o in obj)
             {
                 GameObject g = (GameObject)o;
-                
+
                 if (g.tag.Contains("Pipe"))
                 {
                     g.GetComponent<Collider2D>().enabled = false;
                 }
             }
+
+            //Kill the bird
+            m_IsDead = true;
         }
 
         //Lock the birds angle when you hit the ground
         if (tag.Equals("Ground"))
         {
             m_AngleLocked = true;
-            Debug.Log("Lock");
+            //Debug.Log("Lock");
         }
     }
 
-    void OnTriggerEnter2D(Collider2D other)
+    //This function handles collisions with trigger colliders
+    void OnTriggerEnter2D(Collider2D collider)
     {
-        GlobalVariables.AddClearedPipe();
+        if (OnClearPipe != null)
+        {
+            OnClearPipe.Invoke(collider);
+        }
+
         AudioManager.PlaySFX(AudioManager.Sound.Point);
     }
 

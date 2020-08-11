@@ -66,7 +66,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 4546439482337778792}
-  - component: {fileID: 5137231576526832355}
   m_Layer: 0
   m_Name: Pipe
   m_TagString: Untagged
@@ -91,19 +90,6 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &5137231576526832355
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4546439482337778793}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ac0bc003889df1a4ab8d7dfbc4e2b54d, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  speedMultiplier: 2.95
 --- !u!1 &4546439482781104688
 GameObject:
   m_ObjectHideFlags: 0
