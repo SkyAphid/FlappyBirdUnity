@@ -5,17 +5,6 @@ using UnityEngine;
 public class PipeController : MonoBehaviour
 {
 
-    #region Pipe Movement
-
-    [SerializeField] private GameObject m_Ground = null;
-    private float m_GroundSpeed = 0f;
-
-    //Mulitplier for ground scrolling speed to match the pipe up with the grounds scrolling
-    //Allows for you to only have to modify the speed of the ground scrolling to also modify the pipe scrolling as well
-    [SerializeField] private float speedMultiplier = 0f;
-
-    #endregion
-
     #region Pipe Spawning
 
     [SerializeField] private GameObject m_PipeBlueprint = null;
@@ -31,15 +20,8 @@ public class PipeController : MonoBehaviour
 
     #endregion
 
-
-    // Start is called before the first frame update
-    void Start()
-    {
-        m_GroundSpeed = m_Ground.GetComponent<TextureScroller>().Speed;
-    }
-
     // Manual update function called from GameManager
-    public void ManualUpdate()
+    public void ManualUpdate(float scrollSpeed, float pipeSpeedMultiplier)
     {
         //Pipe Spawning
         if (m_PipeSpawnTimer > 0)
@@ -55,14 +37,8 @@ public class PipeController : MonoBehaviour
         //Pipe movement
         for (int i = 0; i < m_Pipes.Count; i++)
         {
-            ScrollPipe(m_Pipes[i]);
+            ScrollPipe(scrollSpeed, pipeSpeedMultiplier, m_Pipes[i]);
         }
-    }
-
-    //Set the ground gameobject and scroll based on its scrolling speed
-    public void SetGround(GameObject Ground)
-    {
-        m_Ground = Ground;
     }
 
     private void SpawnPipe()
@@ -72,17 +48,17 @@ public class PipeController : MonoBehaviour
         m_Pipes.Add(pipe);
     }
 
-    private void ScrollPipe(GameObject pipe)
+    private void ScrollPipe(float scrollSpeed, float pipeSpeedMultiplier, GameObject pipe)
     {
         //Scroll the pipe across the screen
-        Vector3 offset = new Vector3(-(m_GroundSpeed * speedMultiplier) * Time.deltaTime, 0, 0);
+        Vector3 offset = new Vector3(-(scrollSpeed * pipeSpeedMultiplier) * Time.deltaTime, 0, 0);
         pipe.transform.position += offset;
 
         //Destroy the pipe once it's outside of the screen
         if (pipe.transform.position.x < -2f)
         {
-            Destroy(pipe);
             m_Pipes.Remove(pipe);
+            Destroy(pipe);
         }
     }
 }

@@ -37,6 +37,18 @@ public class BirdController : MonoBehaviour
         m_Animator = gameObject.GetComponent<Animator>();
     }
 
+    private void OnEnable()
+    {
+        this.Input.Enable();
+        this.Input.Player.Confirm.performed += Jump;
+    }
+
+    private void OnDisable()
+    {
+        this.Input.Player.Confirm.performed -= Jump;
+        this.Input.Disable();
+    }
+
     // Update is called once per frame
     public void ManualUpdate()
     {
@@ -133,17 +145,5 @@ public class BirdController : MonoBehaviour
         }
 
         AudioManager.PlaySFX(AudioManager.Sound.Point);
-    }
-
-    private void OnEnable()
-    {
-        this.Input.Enable();
-        this.Input.Player.Confirm.performed += Jump;
-    }
-
-    private void OnDisable()
-    {
-        this.Input.Player.Confirm.performed -= Jump;
-        this.Input.Disable();
     }
 }
