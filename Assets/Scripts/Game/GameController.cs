@@ -4,16 +4,24 @@ using System.Collections.Generic;
 using System.Runtime.InteropServices.WindowsRuntime;
 using UnityEngine;
 using UnityEngine.InputSystem.XR.Haptics;
+using UnityEngine.UI;
+using Random = UnityEngine.Random;
 
 public class GameController : MonoBehaviour
 {
 
-    [SerializeField] private GameObject m_Bird = null;
-    [SerializeField] private GameObject m_Background = null;
-    [SerializeField] private GameObject m_Ground = null;
-    [SerializeField] private GameObject m_PipeManager = null;
+    #region UI Controller
+
+    [SerializeField] private UIController m_UIController = null;
+
+    #endregion
 
     #region Bird Controller
+
+    //Bird object
+    [SerializeField] private GameObject m_Bird = null;
+
+    //Bird Controller Script
     private BirdController m_BirdController = null;
 
     private BirdController BirdController
@@ -21,9 +29,14 @@ public class GameController : MonoBehaviour
         get { return m_BirdController = m_BirdController ?? m_Bird.GetComponent<BirdController>(); }
     }
 
+
     #endregion
 
-    #region Background Scroller
+    #region Background
+
+    [SerializeField] private Material m_BackgroundMatDay = null;
+    [SerializeField] private Material m_BackgroundMatNight = null;
+    [SerializeField] private GameObject m_Background = null;
 
     private TextureScroller m_BackgroundScroller = null;
 
@@ -34,7 +47,9 @@ public class GameController : MonoBehaviour
 
     #endregion
 
-    #region Ground Scroller
+    #region Ground
+
+    [SerializeField] private GameObject m_Ground = null;
 
     private TextureScroller m_GroundScroller = null;
 
@@ -46,6 +61,8 @@ public class GameController : MonoBehaviour
 
     #region Pipe Controller
 
+    [SerializeField] private GameObject m_PipeManager = null;
+
     private PipeController m_PipeController = null;
 
     private PipeController PipeController
@@ -55,9 +72,26 @@ public class GameController : MonoBehaviour
 
     #endregion
 
-    #region Game States & Configurations
+    #region Game Pausing
 
     private bool m_IsPaused = false;
+    private bool IsPaused { 
+        get => m_IsPaused;
+
+        set {
+            m_IsPaused = value;
+
+            if (OnGamePause != null)
+            {
+                OnGamePause.Invoke(IsPaused);
+            }
+        } 
+    }
+
+    #endregion
+
+    #region Additional Game States & Configurations
+
     private bool m_IsGameOver = false;
 
     //The number of pipes the player has successfully passed through
@@ -72,35 +106,64 @@ public class GameController : MonoBehaviour
 
     #endregion
 
-    #region Game State Callbacks
+    #region Event Callbacks
 
-    public event Action<int> OnPipeCleared = null;
-    public event Action OnGameOver = null;
+    private event Action<int> OnPipeCleared = null;
+    private event Action OnGameOver = null;
+    private event Action<bool> OnGamePause = null;
 
     #endregion
 
     private void OnEnable()
     {
-        //Hook up action callbacks
+        //Connect GameManager to BirdController so it can listen for the Bird hitting anything
+        //The bird is the one that calls the callback since it's the one detecting the collisions (instead of vice versa)
         this.BirdController.OnCollision += BirdCollisionHandler;
         this.BirdController.OnClearPipe += BirdClearPipeHandler;
+
+        //This callback is triggered when you successfully clear a pipe
+        OnPipeCleared += m_UIController.UpdateTextCallback;
+
+        //Callbacks for Game Over and Pause
+        OnGameOver += m_UIController.GameOverCallback;
+        OnGamePause += BirdController.OnGamePause;
     }
 
     private void OnDisable()
     {
         this.BirdController.OnCollision -= BirdCollisionHandler;
         this.BirdController.OnClearPipe -= BirdClearPipeHandler;
+
+        OnPipeCleared -= m_UIController.UpdateTextCallback;
+
+        OnGameOver -= m_UIController.GameOverCallback;
+        OnGamePause -= BirdController.OnGamePause;
+    }
+
+    private void Start()
+    {
+        if (Random.value > 0.5f)
+        {
+            m_Background.GetComponent<MeshRenderer>().material = m_BackgroundMatDay;
+        }
+        else
+        {
+            m_Background.GetComponent<MeshRenderer>().material = m_BackgroundMatNight;
+        }
     }
 
     void Update()
     {
-        this.BirdController.ManualUpdate();
-
-        if (!m_IsGameOver)
+        if (!IsPaused)
         {
-            this.BackgroundScroller.ManualUpdate(m_ScrollSpeed);
-            this.GroundScroller.ManualUpdate(m_ScrollSpeed);
-            this.PipeController.ManualUpdate(m_ScrollSpeed, m_PipeSpeedMultiplier);
+            this.BirdController.ManualUpdate();
+
+            if (!m_IsGameOver)
+            {
+                this.BackgroundScroller.ManualUpdate(m_ScrollSpeed);
+                this.GroundScroller.ManualUpdate(m_ScrollSpeed);
+                this.PipeController.ManualUpdate(m_ScrollSpeed, m_PipeSpeedMultiplier);
+            }
         }
     }
 
@@ -114,6 +177,13 @@ public class GameController : MonoBehaviour
     {
         m_PipesCleared++;
         OnPipeCleared.Invoke(m_PipesCleared);
+    }
+
+    public void PauseButtonCallback()
+    {
+        IsPaused = !IsPaused;
+        m_UIController.PauseButtonCallback(IsPaused);
+        AudioController.PlaySFX(AudioController.Sound.Select);
     }
 
 }

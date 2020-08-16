@@ -9,9 +9,14 @@ public class PipeController : MonoBehaviour
 
     [SerializeField] private GameObject m_PipeBlueprint = null;
 
-    //Pipe spawn in seconds
-    private const float PIPE_SPAWN_TIMER = 3f;
-    private float m_PipeSpawnTimer = PIPE_SPAWN_TIMER;
+    //The initial delay before pipes start spawning
+    [SerializeField] private float m_PipeSpawnDelayInSeconds = 0f;
+
+    //Pipe spawn rate in seconds (how often a new pipe is spawned)
+    [SerializeField] private float m_PipeRespawnRateInSeconds = 0f;
+
+    //Pipe spawn timer
+    private float m_PipeSpawnTimer = 0f;
 
     private const float PIPE_MIN_OFFSET_Y = -1f;
     private const float PIPE_MAX_OFFSET_Y = 1f;
@@ -19,6 +24,11 @@ public class PipeController : MonoBehaviour
     private readonly List<GameObject> m_Pipes = new List<GameObject>();
 
     #endregion
+
+    public void Start()
+    {
+        m_PipeSpawnTimer = m_PipeSpawnDelayInSeconds;
+    }
 
     // Manual update function called from GameManager
     public void ManualUpdate(float scrollSpeed, float pipeSpeedMultiplier)
@@ -31,7 +41,7 @@ public class PipeController : MonoBehaviour
         else
         {
             SpawnPipe();
-            m_PipeSpawnTimer = PIPE_SPAWN_TIMER;
+            m_PipeSpawnTimer = m_PipeRespawnRateInSeconds;
         }
 
         //Pipe movement

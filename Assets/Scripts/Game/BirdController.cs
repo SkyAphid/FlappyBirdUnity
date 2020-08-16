@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEditor.U2D.Path.GUIFramework;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
 
 public class BirdController : MonoBehaviour
@@ -18,8 +19,27 @@ public class BirdController : MonoBehaviour
 
     #endregion
 
-    [SerializeField] private Rigidbody2D m_RigidBody = null;
+    #region BirdBody (Rigidbody2D)
+
+    private Rigidbody2D m_BirdBody = null;
+
+    private Rigidbody2D BirdBody
+    {
+        get { return m_BirdBody = m_BirdBody ?? gameObject.GetComponent<Rigidbody2D>(); }
+    }
+
+    #endregion
+
+    #region Animator
+
     private Animator m_Animator = null;
+
+    private Animator Animator
+    {
+        get { return m_Animator = m_Animator ?? GetComponent<Animator>(); }
+    }
+
+    #endregion
 
     //Bird rotation angle
     private bool m_AngleLocked = false;
@@ -27,40 +47,53 @@ public class BirdController : MonoBehaviour
 
     //Whether or not the bird has hit an obstacle and died
     private bool m_IsDead = false;
+    private bool m_Jump = false;
+
+    //We'll use this to store the bird's velocity when you pause the game so there's no inconsistencies with velocity after pausing
+    private Vector2 pausedVelocity = Vector2.zero;
 
     //Callbacks for various game actions
     public event Action<Collision2D> OnCollision;
     public event Action<Collider2D> OnClearPipe;
 
-    private void Start()
-    {
-        m_Animator = gameObject.GetComponent<Animator>();
-    }
-
     private void OnEnable()
     {
-        this.Input.Enable();
-        this.Input.Player.Confirm.performed += Jump;
+        Input.Enable();
+        Input.Player.Confirm.performed += JumpCallback;
     }
 
     private void OnDisable()
     {
-        this.Input.Player.Confirm.performed -= Jump;
+        this.Input.Player.Confirm.performed -= JumpCallback;
         this.Input.Disable();
     }
 
     // Update is called once per frame
     public void ManualUpdate()
     {
+        //Jump in response to the callback
+        if (m_Jump)
+        {
+            if (!m_IsDead)
+            {
+                //Reset the velocity and then apply an impulse force upward
+                BirdBody.velocity = new Vector2(0, 0);
+                BirdBody.AddForce(new Vector2(0, 3), ForceMode2D.Impulse);
+                AudioController.PlaySFX(AudioController.Sound.Flap);
+            }
+
+            m_Jump = false;
+        }
+
         //Bird is allowed to move horizontally
-        m_RigidBody.velocity = new Vector2(0, m_RigidBody.velocity.y);
+        BirdBody.velocity = new Vector2(0, BirdBody.velocity.y);
 
         //The angle is locked once you hit the ground so the bird doesn't keep turning once it's landed
         //This behavior is meant to replicate the one seen in the OG game where the bird faces toward the ground when it's dead
         if (!m_AngleLocked)
         {
             //Angle the bird to face its velocity
-            Vector2 v = m_RigidBody.velocity;
+            Vector2 v = BirdBody.velocity;
             float tarAngle = (Mathf.Atan2(v.y, v.x) * Mathf.Rad2Deg);
 
             //Tilt the bird when jumping up
@@ -75,41 +108,63 @@ public class BirdController : MonoBehaviour
             //Apply the rotation
             transform.rotation = Quaternion.AngleAxis(m_BirdAngle, Vector3.forward);
         }
+
+        if (m_IsDead)
+        {
+            Animator.speed = 0f;
+        }
     }
 
-    private void Jump(InputAction.CallbackContext context)
+    #region Callbacks
+
+    public void OnGamePause(bool isPaused)
     {
-        if (!m_IsDead)
+
+        if (isPaused)
         {
-            //Reset the velocity and then apply an impulse force upward
-            m_RigidBody.velocity = new Vector2(0, 0);
-            m_RigidBody.AddForce(new Vector2(0, 3), ForceMode2D.Impulse);
-            AudioManager.PlaySFX(AudioManager.Sound.Flap);
+            pausedVelocity = BirdBody.velocity;
+            BirdBody.velocity = Vector2.zero;
+        }
+        else
+        {
+            BirdBody.velocity = pausedVelocity;
+        }
+
+        BirdBody.isKinematic = isPaused;
+        Animator.speed = isPaused ? 0f : 1f;
+    }
+
+    private void JumpCallback(InputAction.CallbackContext context)
+    {
+        //If the player's mouse is hovering over the pause button, and they click, we don't want the bird to also jump
+        //We also check if the player is using the space key to jump, in which case it doesn't matter if youre hovering the pause button
+        bool isHoveringUIElement = (EventSystem.current.currentSelectedGameObject != null);
+        bool isAttemptingToJumpWithMouse = context.action.activeControl.ToString().Split('/')[1].Contains("Mouse");
+
+        if (!isHoveringUIElement || !isAttemptingToJumpWithMouse)
+        {
+            m_Jump = true;
+            Debug.Log("Jump");
         }
     }
 
     //This function handles collisions with obstacles
     private void OnCollisionEnter2D(Collision2D collision)
     {
-
-        if (OnCollision != null)
-        {
-            OnCollision.Invoke(collision);
-        }
+        
+        OnCollision.Invoke(collision);
 
         string tag = collision.collider.tag;
 
         if (!m_IsDead)
         {
-            m_Animator.speed = 0f;
-
             //Default smash sound for colliding into something
-            AudioManager.PlaySFX(AudioManager.Sound.Hit);
+            AudioController.PlaySFX(AudioController.Sound.Hit);
 
             //Play falling sound if you hit a pipe
             if (tag.Contains("Pipe"))
             {
-                AudioManager.PlaySFX(AudioManager.Sound.Fall);
+                AudioController.PlaySFX(AudioController.Sound.Fall);
             }
 
             //Allow the bird to fall through the bottom pipe like in the original game
@@ -132,18 +187,15 @@ public class BirdController : MonoBehaviour
         if (tag.Equals("Ground"))
         {
             m_AngleLocked = true;
-            //Debug.Log("Lock");
         }
     }
 
     //This function handles collisions with trigger colliders
     void OnTriggerEnter2D(Collider2D collider)
     {
-        if (OnClearPipe != null)
-        {
-            OnClearPipe.Invoke(collider);
-        }
-
-        AudioManager.PlaySFX(AudioManager.Sound.Point);
+        OnClearPipe.Invoke(collider);
+        AudioController.PlaySFX(AudioController.Sound.Point);
     }
+
+    #endregion
 }

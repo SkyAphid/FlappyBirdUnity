@@ -2,11 +2,11 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class AudioManager : MonoBehaviour
+public class AudioController : MonoBehaviour
 {
 
 
-    public static AudioManager Instance;
+    public static AudioController Instance;
 
     public enum Sound
     {
@@ -14,6 +14,7 @@ public class AudioManager : MonoBehaviour
         Flap,
         Hit,
         Point,
+        Select,
         Swoosh
     }
 
