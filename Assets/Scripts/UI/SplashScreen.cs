@@ -22,13 +22,18 @@ public class SplashScreen : MonoBehaviour
 
     private bool m_FadeStart = false;
 
+    private void Start()
+    {
+        
+    }
+
     private void Update()
     {
         m_FadeDelayTime -= Time.deltaTime;
 
         if (m_FadeDelayTime < 0 && !m_FadeStart)
         {
-            StartCoroutine("Fader");
+            StartCoroutine(Fader());
             m_FadeStart = true;
         }
     }
@@ -43,9 +48,9 @@ public class SplashScreen : MonoBehaviour
             float normalizedProgress = (progress / m_FadeTime);
             float alpha = Mathf.Lerp(1, 0, normalizedProgress);
 
-            Color c = SplashImage.color;
+            Color c = this.SplashImage.color;
             c.a = alpha;
-            SplashImage.color = c;
+            this.SplashImage.color = c;
 
             progress += Time.deltaTime;
 
@@ -53,6 +58,6 @@ public class SplashScreen : MonoBehaviour
 
         } while (progress < m_FadeTime);
 
-        gameObject.SetActive(false);
+        this.gameObject.SetActive(false);
     }
 }

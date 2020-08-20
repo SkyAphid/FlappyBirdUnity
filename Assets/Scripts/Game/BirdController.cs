@@ -10,7 +10,7 @@ public class BirdController : MonoBehaviour
 {
 
     #region Input
-    private InputMaster Input
+    public InputMaster Input
     {
         get { return m_InputMaster = m_InputMaster ?? new InputMaster(); }
     }
@@ -58,14 +58,14 @@ public class BirdController : MonoBehaviour
 
     private void OnEnable()
     {
-        Input.Enable();
-        Input.Player.Confirm.performed += JumpCallback;
+        this.Input.Enable();
+        this.Input.Player.Confirm.performed += JumpCallback;
     }
 
     private void OnDisable()
     {
-        this.Input.Player.Confirm.performed -= JumpCallback;
         this.Input.Disable();
+        this.Input.Player.Confirm.performed -= JumpCallback;
     }
 
     // Update is called once per frame
@@ -77,8 +77,8 @@ public class BirdController : MonoBehaviour
             if (!m_IsDead)
             {
                 //Reset the velocity and then apply an impulse force upward
-                BirdBody.velocity = new Vector2(0, 0);
-                BirdBody.AddForce(new Vector2(0, 3), ForceMode2D.Impulse);
+                this.BirdBody.velocity = new Vector2(0, 0);
+                this.BirdBody.AddForce(new Vector2(0, 3), ForceMode2D.Impulse);
                 AudioController.PlaySFX(AudioController.Sound.Flap);
             }
 
@@ -86,14 +86,14 @@ public class BirdController : MonoBehaviour
         }
 
         //Bird is allowed to move horizontally
-        BirdBody.velocity = new Vector2(0, BirdBody.velocity.y);
+        this.BirdBody.velocity = new Vector2(0, this.BirdBody.velocity.y);
 
         //The angle is locked once you hit the ground so the bird doesn't keep turning once it's landed
         //This behavior is meant to replicate the one seen in the OG game where the bird faces toward the ground when it's dead
         if (!m_AngleLocked)
         {
             //Angle the bird to face its velocity
-            Vector2 v = BirdBody.velocity;
+            Vector2 v = this.BirdBody.velocity;
             float tarAngle = (Mathf.Atan2(v.y, v.x) * Mathf.Rad2Deg);
 
             //Tilt the bird when jumping up
@@ -111,11 +111,11 @@ public class BirdController : MonoBehaviour
 
         if (m_IsDead)
         {
-            Animator.speed = 0f;
+            this.Animator.speed = 0f;
         }
     }
 
-    #region Callbacks
+    #region Gameplay Callbacks
 
     public void OnGamePause(bool isPaused)
     {
@@ -123,36 +123,40 @@ public class BirdController : MonoBehaviour
         if (isPaused)
         {
             pausedVelocity = BirdBody.velocity;
-            BirdBody.velocity = Vector2.zero;
+            this.BirdBody.velocity = Vector2.zero;
         }
         else
         {
-            BirdBody.velocity = pausedVelocity;
+            this.BirdBody.velocity = pausedVelocity;
         }
 
-        BirdBody.isKinematic = isPaused;
-        Animator.speed = isPaused ? 0f : 1f;
+        this.BirdBody.isKinematic = isPaused;
+        this.Animator.speed = isPaused ? 0f : 1f;
     }
 
     private void JumpCallback(InputAction.CallbackContext context)
     {
-        //If the player's mouse is hovering over the pause button, and they click, we don't want the bird to also jump
-        //We also check if the player is using the space key to jump, in which case it doesn't matter if youre hovering the pause button
-        bool isHoveringUIElement = (EventSystem.current.currentSelectedGameObject != null);
-        bool isAttemptingToJumpWithMouse = context.action.activeControl.ToString().Split('/')[1].Contains("Mouse");
 
-        if (!isHoveringUIElement || !isAttemptingToJumpWithMouse)
+        //Detects if the mouse is hovering the UI. Everything connected to the EventSystem is detected.
+        //The splash screen is excluded from this because the "raycast target" option is unchecked
+        bool isPointerOverUI = EventSystem.current.IsPointerOverGameObject();
+
+        //Check if the player is using the space key to jump, in which case it doesn't matter if youre hovering the pause button
+        bool isUsingJumpKey = !context.action.activeControl.ToString().Split('/')[1].Contains("Mouse");
+
+
+        if (!isPointerOverUI || isUsingJumpKey)
         {
             m_Jump = true;
-            Debug.Log("Jump");
+            //Debug.Log("Jump");
         }
     }
 
     //This function handles collisions with obstacles
     private void OnCollisionEnter2D(Collision2D collision)
     {
-        
-        OnCollision.Invoke(collision);
+
+        this.OnCollision.Invoke(collision);
 
         string tag = collision.collider.tag;
 
@@ -193,7 +197,7 @@ public class BirdController : MonoBehaviour
     //This function handles collisions with trigger colliders
     void OnTriggerEnter2D(Collider2D collider)
     {
-        OnClearPipe.Invoke(collider);
+        this.OnClearPipe.Invoke(collider);
         AudioController.PlaySFX(AudioController.Sound.Point);
     }
 

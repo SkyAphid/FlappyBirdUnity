@@ -18,8 +18,11 @@ public class AudioController : MonoBehaviour
         Swoosh
     }
 
+    [SerializeField] private float m_MasterVolume = 1f;
+
     [SerializeField] private AudioClip[] AudioClips = null;
     private AudioSource[] AudioSource;
+
 
     void Awake()
     {
@@ -43,6 +46,8 @@ public class AudioController : MonoBehaviour
 
     public static void PlaySFX(Sound sound)
     {
-        Instance.AudioSource[(int)sound].Play();
+        int i = (int)sound;
+        Instance.AudioSource[i].volume = Instance.m_MasterVolume;
+        Instance.AudioSource[i].Play();
     }
 }

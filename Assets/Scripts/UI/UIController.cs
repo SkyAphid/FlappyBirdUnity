@@ -7,16 +7,22 @@ using UnityEngine.UI;
 public class UIController : MonoBehaviour
 {
 
-    #region Points Text
+    #region Splash Screen
+
+    [SerializeField] private GameObject m_SplashScreen = null;
+
+    #endregion
+
+    #region Score Text
 
     //Store the Points Text Object
-    [SerializeField] private GameObject m_PointsText = null;
+    [SerializeField] private GameObject m_ScoreText = null;
 
     //Then fetch the Text Mesh from the Text Object
-    private TextMeshProUGUI m_PointsTextMesh = null;
-    public TextMeshProUGUI PointsText
+    private TextMeshProUGUI m_ScoreTextMesh = null;
+    public TextMeshProUGUI ScoreText
     {
-        get { return m_PointsTextMesh = m_PointsTextMesh ?? m_PointsText.GetComponent<TextMeshProUGUI>(); }
+        get { return m_ScoreTextMesh = m_ScoreTextMesh ?? m_ScoreText.GetComponent<TextMeshProUGUI>(); }
     }
 
     #endregion
@@ -42,27 +48,42 @@ public class UIController : MonoBehaviour
     [SerializeField] private Sprite m_SpritePause = null;
     [SerializeField] private Sprite m_SpritePlay = null;
 
-    [SerializeField] private GameObject m_PauseButtonObject = null;
+    [SerializeField] private GameObject m_PauseButtonParent = null;
 
     private Button m_PauseButton = null;
 
     private Button PauseButton
     {
-        get { return m_PauseButton = m_PauseButton ?? m_PauseButtonObject.GetComponent<Button>(); }
+        get { return m_PauseButton = m_PauseButton ?? m_PauseButtonParent.GetComponent<Button>(); }
     }
 
     private Image m_PauseImage = null;
 
     private Image PauseImage
     {
-        get { return m_PauseImage = m_PauseImage ?? m_PauseButtonObject.GetComponent<Image>(); }
+        get { return m_PauseImage = m_PauseImage ?? m_PauseButtonParent.GetComponent<Image>(); }
     }
 
     #endregion
 
+    #region Game Over Screen
+
+    [SerializeField] private GameObject m_GameOverScreen = null;
+
+    private GameOverController m_GameOverController = null;
+
+    private GameOverController GameOverController
+    {
+        get { return m_GameOverController = m_GameOverController ?? m_GameOverScreen.GetComponent<GameOverController>(); }
+    }
+
+    #endregion
+
+    private int m_FinalScore = 0;
+
     public void OnEnable()
     {
-        DeathFlash.OnFlashEnd += ShowGameOverScreen;        
+        DeathFlash.OnFlashEnd += ShowGameOverScreen;  
     }
 
     public void OnDisable()
@@ -70,37 +91,49 @@ public class UIController : MonoBehaviour
         DeathFlash.OnFlashEnd -= ShowGameOverScreen;
     }
 
-    //Updates the point text at the top of the screen with the current score
-    public void UpdateTextCallback(int points)
+    public void Start()
     {
-        PointsText.text = points.ToString();
+        //Activate the splash screen on game start
+        m_SplashScreen.SetActive(true);
+    }
+
+    //Updates the point text at the top of the screen with the current score
+    public void UpdateScoreTextCallback(int score)
+    {
+        this.ScoreText.text = score.ToString();
     }
 
     public void PauseButtonCallback(bool isPaused)
     {
         if (isPaused)
         {
-            PauseImage.sprite = m_SpritePlay;
+            this.PauseImage.sprite = m_SpritePlay;
         } else
         {
-            PauseImage.sprite = m_SpritePause;
+            this.PauseImage.sprite = m_SpritePause;
         }
     }
 
     //Calls various UI functions for when the game is over
-    public void GameOverCallback()
+    public void GameOverCallback(int finalScore)
     {
+
         if (!m_HasFlashed)
         {
-            DeathFlash.ShowDeathFlash();
-            PauseButton.interactable = false;
+            this.DeathFlash.ShowDeathFlash();
+
+            m_SplashScreen.SetActive(false);
+            m_ScoreText.SetActive(false);
+            m_PauseButtonParent.SetActive(false);
+
             m_HasFlashed = true;
+            m_FinalScore = finalScore;
         }
     }
 
     private void ShowGameOverScreen()
     {
-
+        this.GameOverController.Activate(m_FinalScore);
     }
 
 }

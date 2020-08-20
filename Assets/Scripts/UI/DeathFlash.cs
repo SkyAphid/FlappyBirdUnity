@@ -29,17 +29,10 @@ public class DeathFlash : MonoBehaviour
 
     public event Action OnFlashEnd = null;
 
-    private Vector3 m_ResetVector;
-
-    private void Start()
-    {
-        m_ResetVector = m_Camera.transform.position;
-    }
-
     public void ShowDeathFlash()
     {
-        gameObject.SetActive(true);
-        StartCoroutine("Fader");
+        this.gameObject.SetActive(true);
+        StartCoroutine(Fader());
     }
 
     //Coroutine for fading the screen from white and shaking the camera
@@ -65,7 +58,7 @@ public class DeathFlash : MonoBehaviour
             yield return null;
         }
 
-        OnFlashEnd.Invoke();
-        gameObject.SetActive(false);
+        this.OnFlashEnd.Invoke();
+        this.gameObject.SetActive(false);
     }
 }
