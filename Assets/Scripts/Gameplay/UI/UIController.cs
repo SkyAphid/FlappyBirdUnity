@@ -115,12 +115,12 @@ public class UIController : MonoBehaviour
 
     public void OnEnable()
     {
-        ScreenFlash.OnFlashEnd += ShowGameOverScreen;  
+        this.ScreenFlash.OnFlashEnd += ShowGameOverScreen;  
     }
 
     public void OnDisable()
     {
-        ScreenFlash.OnFlashEnd -= ShowGameOverScreen;
+        this.ScreenFlash.OnFlashEnd -= ShowGameOverScreen;
     }
 
     public void Start()
@@ -158,7 +158,7 @@ public class UIController : MonoBehaviour
 
         if (!m_HasFlashed)
         {
-            this.ScreenFlash.ShowFlash(true, true);
+            this.ScreenFlash.StartFlash(true, true);
 
             m_SplashScreen.SetActive(false);
             m_ScoreText.SetActive(false);

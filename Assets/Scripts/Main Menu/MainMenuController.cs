@@ -12,6 +12,10 @@ using Random = UnityEngine.Random;
 
 public class MainMenuController : MonoBehaviour
 {
+
+    //Constant for the name of the game scene; at the top for easy editing if needed
+    private const string GAME_SCENE = "GameScene";
+
     #region Input
 
     public InputMaster Input
@@ -23,6 +27,14 @@ public class MainMenuController : MonoBehaviour
 
     #endregion
 
+    [Header("Game Start Up")]
+    #region Start-up Animator
+
+    [SerializeField] private GameObject m_StartUpAnimator = null;
+
+    #endregion
+
+    [Header("Background")]
     #region Background
 
     [SerializeField] private Material m_BackgroundMatDay = null;
@@ -53,14 +65,52 @@ public class MainMenuController : MonoBehaviour
     //Game scroll speed, modifies the overall speed of the background
     [SerializeField] private float m_ScrollSpeed = 0f;
 
+    [Header("UI")]
+
+    #region Screen Fader
+
+    [SerializeField] private GameObject m_ScreenFaderPanel = null;
+
+    private Fader m_ScreenFader = null;
+
+    public Fader ScreenFader
+    {
+        get { return m_ScreenFader = m_ScreenFader ?? m_ScreenFaderPanel.GetComponent<Fader>(); }
+    }
+
+    #endregion
+
+    #region Play Button
+
+    [SerializeField] private GameObject m_PlayButtonObj = null;
+
+    private Button m_PlayButton = null;
+
+    private Button PlayButton
+    {
+        get { return m_PlayButton = m_PlayButton ?? m_PlayButtonObj.GetComponent<Button>(); }
+    }
+
+    #endregion
+
     private void OnEnable()
     {
-        Input.Enable();
+        this.Input.Enable();
+
+        //Add callback to screen fader to change the scene when the screen is white
+        this.ScreenFader.OnFadeOutEnd += StartGameFaderCallback;
+
+        //If the play button is clicked, start the game
+        this.PlayButton.onClick.AddListener(() => StartGame());
     }
 
     private void OnDisable()
     {
-        Input.Disable();
+        this.ScreenFader.OnFadeOutEnd -= StartGameFaderCallback;
+
+        this.PlayButton.onClick.RemoveAllListeners();
+
+        this.Input.Disable();
     }
 
     private void Start()
@@ -80,4 +130,20 @@ public class MainMenuController : MonoBehaviour
         this.BackgroundScroller.ManualUpdate(m_ScrollSpeed);
         this.GroundScroller.ManualUpdate(m_ScrollSpeed);
     }
+
+    #region Callbacks
+
+    //Start the game by transitioning to the game state
+    private void StartGame()
+    {
+        m_PlayButtonObj.SetActive(false);
+        this.ScreenFader.StartFadeIn(true);
+    }
+    private void StartGameFaderCallback()
+    {
+        DOTween.KillAll();
+        SceneManager.LoadScene(GAME_SCENE);
+    }
+
+    #endregion
 }

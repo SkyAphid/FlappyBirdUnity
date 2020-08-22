@@ -38,12 +38,10 @@ public class ScreenFlash : MonoBehaviour
     /// Shake screen determines whether or not to shake the camera (simulating force)
     /// 
     /// </summary>
-    /// <param name="callbacksEnabled"></param>
-    /// <param name="shakeScreen"></param>
-    public void ShowFlash(bool callbacksEnabled, bool shakeScreen)
+    public void StartFlash(bool callbacksEnabled, bool shakeScreen)
     {
-        m_CallbacksEnabled = callbacksEnabled;
-        m_ShakeScreen = shakeScreen;
+        this.m_CallbacksEnabled = callbacksEnabled;
+        this.m_ShakeScreen = shakeScreen;
 
         this.gameObject.SetActive(true);
         StartCoroutine(Fader());
@@ -57,9 +55,9 @@ public class ScreenFlash : MonoBehaviour
         {
 
             //Adjust opacity of flash
-            Color c = Flash.color;
+            Color c = this.Flash.color;
             c.a = alpha;
-            Flash.color = c;
+            this.Flash.color = c;
 
             //Screen shake
             if (m_ShakeScreen)

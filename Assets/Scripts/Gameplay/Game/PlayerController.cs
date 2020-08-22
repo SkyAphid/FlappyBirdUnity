@@ -41,7 +41,6 @@ public class PlayerController : MonoBehaviour
 
     #endregion
 
-
     #region Player States
 
     //Whether or not the player has began playing yet. The game waits on them.

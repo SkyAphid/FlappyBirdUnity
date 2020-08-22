@@ -12,6 +12,11 @@ using Random = UnityEngine.Random;
 
 public class GameController : MonoBehaviour
 {
+
+    //Constant for the names of the scenes; at the top for easy editing if needed
+    private const string MAIN_MENU_SCENE = "MainMenuScene";
+    private const string GAME_SCENE = "GameScene";
+
     #region Input
 
     public InputMaster Input
@@ -23,12 +28,14 @@ public class GameController : MonoBehaviour
 
     #endregion
 
+    [Header("UI")]
     #region UI Controller
 
     [SerializeField] private UIController m_UIController = null;
 
     #endregion
 
+    [Header("Game")]
     #region Bird Controller
 
     //Bird object
@@ -55,7 +62,7 @@ public class GameController : MonoBehaviour
 
     private TextureScroller BackgroundScroller
     {
-       get { return m_BackgroundScroller = m_BackgroundScroller ?? m_Background.GetComponent<TextureScroller>();  }
+        get { return m_BackgroundScroller = m_BackgroundScroller ?? m_Background.GetComponent<TextureScroller>(); }
     }
 
     #endregion
@@ -68,7 +75,7 @@ public class GameController : MonoBehaviour
 
     private TextureScroller GroundScroller
     {
-        get { return m_GroundScroller = m_GroundScroller ?? m_Ground.GetComponent<TextureScroller>();  }
+        get { return m_GroundScroller = m_GroundScroller ?? m_Ground.GetComponent<TextureScroller>(); }
     }
     #endregion
 
@@ -80,25 +87,28 @@ public class GameController : MonoBehaviour
 
     private PipeController PipeController
     {
-        get { return m_PipeController = m_PipeController ?? m_PipeManager.GetComponent<PipeController>();  }
+        get { return m_PipeController = m_PipeController ?? m_PipeManager.GetComponent<PipeController>(); }
     }
 
     #endregion
 
+    [Header("Game States & Callbacks")]
     #region Game Pausing
 
     private bool m_IsPaused = false;
-    private bool IsPaused { 
+    private bool IsPaused
+    {
         get => m_IsPaused;
 
-        set {
+        set
+        {
             m_IsPaused = value;
 
             if (OnGamePause != null)
             {
                 OnGamePause.Invoke(IsPaused);
             }
-        } 
+        }
     }
 
     #endregion
@@ -131,9 +141,9 @@ public class GameController : MonoBehaviour
 
     private void OnEnable()
     {
-        Input.Enable();
+        this.Input.Enable();
 
-        this.m_UIController.ScreenFlash.ShowFlash(false, false);
+        m_UIController.ScreenFlash.StartFlash(false, false);
 
         this.PlayerController.OnStartPlaying += OnGameStart;
         this.PlayerController.OnStartPlaying += m_UIController.OnGameStartCallback;
@@ -157,14 +167,15 @@ public class GameController : MonoBehaviour
         this.Input.Player.Pause.performed += PauseButtonKeyCallback;
 
         //TODO: Restart the game on game over
-        this.m_UIController.PlayAgainButton.onClick.AddListener(() => RestartGame());
+        m_UIController.PlayAgainButton.onClick.AddListener(() => RestartGame());
+        m_UIController.MainMenuButton.onClick.AddListener(() => ReturnToMainMenu());
 
         //TODO: Return to main menu
     }
 
+    //Remove all callbacks and do some cleanup
     private void OnDisable()
     {
-        Input.Disable();
 
         this.PlayerController.OnStartPlaying -= OnGameStart;
         this.PlayerController.OnStartPlaying -= m_UIController.OnGameStartCallback;
@@ -176,11 +187,13 @@ public class GameController : MonoBehaviour
 
         this.OnGameOver -= m_UIController.GameOverCallback;
 
-        this.m_UIController.PauseButton.onClick.RemoveAllListeners();
+        m_UIController.PauseButton.onClick.RemoveAllListeners();
         this.Input.Player.Pause.performed -= PauseButtonKeyCallback;
         this.OnGamePause -= this.PlayerController.OnGamePause;
 
-        this.m_UIController.PlayAgainButton.onClick.RemoveAllListeners();
+        m_UIController.PlayAgainButton.onClick.RemoveAllListeners();
+
+        this.Input.Disable();
     }
 
     private void Start()
@@ -256,7 +269,13 @@ public class GameController : MonoBehaviour
     public void RestartGame()
     {
         DOTween.KillAll();
-        SceneManager.LoadScene("GameScene");
+        SceneManager.LoadScene(GAME_SCENE);
+    }
+
+    public void ReturnToMainMenu()
+    {
+        DOTween.KillAll();
+        SceneManager.LoadScene(MAIN_MENU_SCENE);
     }
 
     #endregion

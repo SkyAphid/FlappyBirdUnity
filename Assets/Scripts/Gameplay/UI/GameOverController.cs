@@ -37,8 +37,8 @@ public class GameOverController : MonoBehaviour
         this.gameObject.SetActive(true);
 
         //Set up the game over screen to show the results of the session
-        m_TextFinalScore.GetComponent<TextMeshProUGUI>().SetText(finalScore.ToString());
-        m_TextBestScore.GetComponent<TextMeshProUGUI>().SetText(finalScore.ToString());
+        this.m_TextFinalScore.GetComponent<TextMeshProUGUI>().SetText(finalScore.ToString());
+        this.m_TextBestScore.GetComponent<TextMeshProUGUI>().SetText(finalScore.ToString());
 
         //Score the points and give the appropriate medal
         DetermineMedal(finalScore);
@@ -53,9 +53,9 @@ public class GameOverController : MonoBehaviour
 
         Image medalImage = m_MedalIcon.GetComponent<Image>();
 
-        for (int i = 0; i < Medals.Length; i++)
+        for (int i = 0; i < this.Medals.Length; i++)
         {
-            if (Medals[i].MatchesMedal(finalScore))
+            if (this.Medals[i].MatchesMedal(finalScore))
             {
                 medalImage.sprite = Medals[i].m_MedalSprite;
                 return;
