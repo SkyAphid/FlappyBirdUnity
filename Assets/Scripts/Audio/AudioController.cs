@@ -44,10 +44,12 @@ public class AudioController : MonoBehaviour
         }
     }
 
-    public static void PlaySFX(Sound sound)
+    public static AudioSource PlaySFX(Sound sound)
     {
         int i = (int)sound;
         Instance.AudioSource[i].volume = Instance.m_MasterVolume;
         Instance.AudioSource[i].Play();
+
+        return Instance.AudioSource[i];
     }
 }
