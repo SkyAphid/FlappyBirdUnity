@@ -792,7 +792,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Camera: {fileID: 519420031}
-  m_FadeSpeed: 5
+  m_FadeTime: 0.25
 --- !u!114 &670459473
 MonoBehaviour:
   m_ObjectHideFlags: 0

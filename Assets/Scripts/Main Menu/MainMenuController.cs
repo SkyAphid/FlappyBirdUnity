@@ -27,13 +27,6 @@ public class MainMenuController : MonoBehaviour
 
     #endregion
 
-    [Header("Game Start Up")]
-    #region Start-up Animator
-
-    [SerializeField] private GameObject m_StartUpAnimator = null;
-
-    #endregion
-
     [Header("Background")]
     #region Background
 
@@ -86,7 +79,7 @@ public class MainMenuController : MonoBehaviour
 
     private Button m_PlayButton = null;
 
-    private Button PlayButton
+    public Button PlayButton
     {
         get { return m_PlayButton = m_PlayButton ?? m_PlayButtonObj.GetComponent<Button>(); }
     }
@@ -97,18 +90,18 @@ public class MainMenuController : MonoBehaviour
     {
         this.Input.Enable();
 
-        //Add callback to screen fader to change the scene when the screen is white
-        this.ScreenFader.OnFadeOutEnd += StartGameFaderCallback;
-
         //If the play button is clicked, start the game
         this.PlayButton.onClick.AddListener(() => StartGame());
+
+        //Add callback to screen fader to change the scene when the screen is white
+        this.ScreenFader.OnFadeInEnd += StartGameFaderCallback;
     }
 
     private void OnDisable()
     {
-        this.ScreenFader.OnFadeOutEnd -= StartGameFaderCallback;
-
         this.PlayButton.onClick.RemoveAllListeners();
+
+        this.ScreenFader.OnFadeInEnd -= StartGameFaderCallback;
 
         this.Input.Disable();
     }

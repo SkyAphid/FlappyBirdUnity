@@ -17,10 +17,17 @@ public class Fader : MonoBehaviour
 
     #endregion
 
-    [SerializeField] private float m_FadeSpeed = 0f;
+    [SerializeField] private float m_FadeTime = 1f;
 
     public event Action OnFadeOutEnd = null;
     public event Action OnFadeInEnd = null;
+
+    public void SetOpacity(float alpha)
+    {
+        Color c = Flash.color;
+        c.a = alpha;
+        Flash.color = c;
+    }
 
     /// <summary>
     /// This function will cause the parent object to fade its alpha in and call a callback when it's completed.
@@ -58,17 +65,29 @@ public class Fader : MonoBehaviour
     IEnumerator FadeIn()
     {
 
-        for (float alpha = 0f; alpha < 1f; alpha += m_FadeSpeed * Time.deltaTime)
+        float progress = 0f;
+
+        do
         {
+            float normalizedProgress = (progress / m_FadeTime);
+            float alpha = Mathf.Lerp(0f, 1f, normalizedProgress);
 
             //Adjust opacity of flash
             Color c = this.Flash.color;
             c.a = alpha;
             this.Flash.color = c;
 
-            yield return null;
-        }
+            progress += Time.deltaTime;
 
+            yield return null;
+        } while (progress < m_FadeTime);
+
+        //Snap color on end
+        Color c2 = this.Flash.color;
+        c2.a = 1f;
+        this.Flash.color = c2;
+
+        //Call event handler for fade out end
         if (this.OnFadeInEnd != null)
         {
             this.OnFadeInEnd.Invoke();
@@ -78,17 +97,29 @@ public class Fader : MonoBehaviour
     IEnumerator FadeOut()
     {
 
-        for (float alpha = 1f; alpha > 0f; alpha -= m_FadeSpeed * Time.deltaTime)
+        float progress = 0f;
+
+        do
         {
+            float normalizedProgress = progress / m_FadeTime;
+            float alpha = Mathf.Lerp(1f, 0f, normalizedProgress);
 
             //Adjust opacity of flash
             Color c = this.Flash.color;
             c.a = alpha;
             this.Flash.color = c;
 
-            yield return null;
-        }
+            progress += Time.deltaTime;
 
+            yield return null;
+        } while (progress < m_FadeTime);
+
+        //Snap color on end
+        Color c2 = this.Flash.color;
+        c2.a = 0f;
+        this.Flash.color = c2;
+
+        //Call event handler for fade out end
         if (this.OnFadeOutEnd != null)
         {
             this.OnFadeOutEnd.Invoke();

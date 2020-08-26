@@ -25,7 +25,7 @@ public class ScreenFlash : MonoBehaviour
 
     #endregion
 
-    [SerializeField] private float m_FadeSpeed = 0f;
+    [SerializeField] private float m_FadeTime = 1f;
 
     private bool m_CallbacksEnabled = false;
     private bool m_ShakeScreen = false;
@@ -51,8 +51,12 @@ public class ScreenFlash : MonoBehaviour
     IEnumerator Fader()
     {
 
-        for (float alpha = 1f; alpha > 0f; alpha -= m_FadeSpeed * Time.deltaTime)
+        float progress = 0f;
+
+        do
         {
+            float normalizedProgress = (progress / m_FadeTime);
+            float alpha = Mathf.Lerp(1f, 0f, normalizedProgress);
 
             //Adjust opacity of flash
             Color c = this.Flash.color;
@@ -70,8 +74,10 @@ public class ScreenFlash : MonoBehaviour
                 m_Camera.transform.position += shake;
             }
 
+            progress += Time.deltaTime;
+
             yield return null;
-        }
+        } while (progress < m_FadeTime);
 
         if (m_CallbacksEnabled)
         {

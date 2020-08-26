@@ -8,15 +8,17 @@ using UnityEngine.UI;
 public class StartUpAnimator : MonoBehaviour
 {
 
+    [SerializeField] private GameObject m_MainMenu = null;
+
     #region Screen Fader
 
     [SerializeField] private GameObject m_ScreenFaderObj = null;
 
-    private Image m_ScreenFader = null;
+    private Fader m_ScreenFader = null;
 
-    private Image ScreenFader 
+    private Fader ScreenFader 
     {
-        get { return m_ScreenFader = m_ScreenFader ?? m_ScreenFaderObj.GetComponent<Image>(); }
+        get { return m_ScreenFader = m_ScreenFader ?? m_ScreenFaderObj.GetComponent<Fader>(); }
     }
 
     #endregion
@@ -40,24 +42,31 @@ public class StartUpAnimator : MonoBehaviour
 
     public void OnEnable()
     {
+        //When the fade in completes, wait a moment and then start the fade out
         this.NokoriLogoFader.OnFadeInEnd += StartLogoDelayTimer;
+        this.NokoriLogoFader.OnFadeOutEnd += StartFadeIntoMainMenu;
+
+        this.ScreenFader.OnFadeOutEnd += DisableStartUpScreen;
     }
 
     public void OnDisable()
     {
         this.NokoriLogoFader.OnFadeInEnd -= StartLogoDelayTimer;
+        this.NokoriLogoFader.OnFadeOutEnd -= StartFadeIntoMainMenu;
+
+        this.ScreenFader.OnFadeOutEnd -= DisableStartUpScreen;
     }
 
 
-    // Start is called before the first frame update
     private void Start()
     {
+        //Start the nokori logo fader when the game starts (fade in slowly)
         this.NokoriLogoFader.StartFadeIn(true);
     }
 
-    // Update is called once per frame
     private void Update()
     {
+        //This timer controls how long the logo stays on the screen before it fades back out
         if (m_StartLogoDelayTimer)
         {
             if (m_LogoDelayTimer < m_LogoDelayTimeInSeconds)
@@ -66,20 +75,35 @@ public class StartUpAnimator : MonoBehaviour
             }
             else
             {
-                StartFadeOut();
+                //Timer completed: start fade out
+                StartLogoFadeOut();
                 m_StartLogoDelayTimer = false;
             }
         }
     }
 
+    //Begins the timer before we fade the logo back out
     private void StartLogoDelayTimer()
     {
         m_StartLogoDelayTimer = true;
         m_LogoDelayTimer = 0f;
     }
 
-    private void StartFadeOut()
+    //Begin fading the logo out
+    private void StartLogoFadeOut()
     {
         this.NokoriLogoFader.StartFadeOut(true);
+    }
+
+    //Fade out the logo display screen and fade into the main menu
+    private void StartFadeIntoMainMenu()
+    {
+        ScreenFader.StartFadeOut(true);
+        m_MainMenu.SetActive(true);
+    }
+
+    private void DisableStartUpScreen()
+    {
+        this.gameObject.SetActive(false);
     }
 }
