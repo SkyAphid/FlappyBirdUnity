@@ -81,7 +81,7 @@ public class GameOverController : MonoBehaviour
         resultCanvasGroup.alpha = 0f;
 
         //Start with the game over title
-        m_GameOverTitle.transform.DOPunchScale(new Vector3(0.5f, 0.5f, 0f), 0.3f, 6, 1f)
+        m_GameOverTitle.transform.DOPunchScale(new Vector3(0.25f, 0.25f, 0f), 0.3f, 6, 1f)
             .OnComplete(() => AnimateResultWindow(resultCanvasGroup));
 
     }
